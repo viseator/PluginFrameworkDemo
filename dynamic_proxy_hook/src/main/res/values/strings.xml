@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">PluginFrameworkDemo</string>
+    <string name="target_title">TargetTitle</string>
+</resources>

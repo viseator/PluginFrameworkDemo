@@ -9,6 +9,7 @@
           <set>
             <option value="$PROJECT_DIR$" />
             <option value="$PROJECT_DIR$/dynamic_proxy_hook" />
+            <option value="$PROJECT_DIR$/remote_service" />
           </set>
         </option>
         <option name="resolveModulePerSourceSet" value="false" />

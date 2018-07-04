@@ -10,12 +10,15 @@ import android.os.IBinder
 import android.os.Message
 import android.os.Messenger
 import android.support.v7.app.AppCompatActivity
+import com.viseator.remote_service.IRemoteService
 import kotlinx.android.synthetic.main.activity_main.button1
+import kotlinx.android.synthetic.main.activity_main.button2
 import kotlinx.android.synthetic.main.activity_main.text_view
 
 class MainActivity : AppCompatActivity() {
 
     private var serviceMessenger: Messenger? = null
+    private var remoteBinder: IRemoteService? = null
     private val handler = Handler {
         text_view.text = (it.obj as Bundle).getString("string")
         true
@@ -27,7 +30,11 @@ class MainActivity : AppCompatActivity() {
         }
 
         override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
-            serviceMessenger = Messenger(service)
+            if (name?.className == "com.viseator.remoteservice.MessengerService") {
+                serviceMessenger = Messenger(service)
+            } else {
+                remoteBinder = IRemoteService.Stub.asInterface(service)
+            }
         }
 
     }
@@ -40,10 +47,16 @@ class MainActivity : AppCompatActivity() {
         val intent = Intent(this, MessengerService::class.java)
         intent.putExtra("msg", mainMessenger)
         bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE)
+        bindService(
+                Intent(this, BinderService::class.java), serviceConnection, Context.BIND_AUTO_CREATE
+        )
 
         button1.setOnClickListener {
             val msg = Message.obtain()
             serviceMessenger?.send(msg)
+        }
+        button2.setOnClickListener {
+            text_view.text = remoteBinder?.requestStringFromService(666)
         }
     }
 }

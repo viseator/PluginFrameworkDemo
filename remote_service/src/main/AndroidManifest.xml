@@ -25,6 +25,12 @@
                 android:enabled="true"
                 android:exported="true">
         </service>
+        <service
+                android:process=":binder_service"
+                android:name=".BinderService"
+                android:enabled="true"
+                android:exported="true">
+        </service>
     </application>
 
 </manifest>

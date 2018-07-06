@@ -16,11 +16,7 @@ import com.viseator.remote_service.IRemoteService;
 public class BinderService extends Service {
     private static final String TAG = "@vir BinderService";
 
-    public BinderService() {
-
-    }
-
-    private IRemoteService.Stub mBinder = new IRemoteService.Stub() {
+    private IRemoteService.Stub mService = new IRemoteService.Stub() {
         @Override public String requestStringFromService(int requestCode) throws RemoteException {
             Log.d(TAG, String.valueOf(requestCode));
             return "response from binder service";
@@ -28,6 +24,6 @@ public class BinderService extends Service {
     };
 
     @Nullable @Override public IBinder onBind(Intent intent) {
-        return mBinder.asBinder();
+        return mService.asBinder();
     }
 }

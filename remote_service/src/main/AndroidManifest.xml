@@ -31,6 +31,12 @@
                 android:enabled="true"
                 android:exported="true">
         </service>
+        <service
+                android:process=":vir_binder_service"
+                android:name=".VirBinderService"
+                android:enabled="true"
+                android:exported="true">
+        </service>
     </application>
 
 </manifest>

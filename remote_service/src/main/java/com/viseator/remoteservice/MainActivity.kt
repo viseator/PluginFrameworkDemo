@@ -13,12 +13,14 @@ import android.support.v7.app.AppCompatActivity
 import com.viseator.remote_service.IRemoteService
 import kotlinx.android.synthetic.main.activity_main.button1
 import kotlinx.android.synthetic.main.activity_main.button2
+import kotlinx.android.synthetic.main.activity_main.button3
 import kotlinx.android.synthetic.main.activity_main.text_view
 
 class MainActivity : AppCompatActivity() {
 
     private var serviceMessenger: Messenger? = null
     private var remoteBinder: IRemoteService? = null
+    private var virBinder: IVirService? = null
     private val handler = Handler {
         text_view.text = (it.obj as Bundle).getString("string")
         true
@@ -30,10 +32,12 @@ class MainActivity : AppCompatActivity() {
         }
 
         override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
-            if (name?.className == "com.viseator.remoteservice.MessengerService") {
-                serviceMessenger = Messenger(service)
-            } else {
-                remoteBinder = IRemoteService.Stub.asInterface(service)
+            when (name?.className) {
+                "com.viseator.remoteservice.MessengerService" -> serviceMessenger =
+                        Messenger(service)
+                "com.viseator.remoteservice.BinderService" -> remoteBinder =
+                        IRemoteService.Stub.asInterface(service)
+                else -> virBinder = IVirService.Stub.asInterface(service)
             }
         }
 
@@ -42,13 +46,15 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        text_view.text = "inited"
-
         val intent = Intent(this, MessengerService::class.java)
         intent.putExtra("msg", mainMessenger)
         bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE)
         bindService(
                 Intent(this, BinderService::class.java), serviceConnection, Context.BIND_AUTO_CREATE
+        )
+        bindService(
+                Intent(this, VirBinderService::class.java), serviceConnection,
+                Context.BIND_AUTO_CREATE
         )
 
         button1.setOnClickListener {
@@ -58,5 +64,9 @@ class MainActivity : AppCompatActivity() {
         button2.setOnClickListener {
             text_view.text = remoteBinder?.requestStringFromService(666)
         }
+        button3.setOnClickListener {
+            text_view.text = virBinder?.requestStringFromService(888)
+        }
+        text_view.text = "inited"
     }
 }

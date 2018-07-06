@@ -28,7 +28,7 @@ public class MessengerService extends Service {
                 default:
                     Message response = Message.obtain();
                     Bundle bundle = new Bundle();
-                    bundle.putString("string", "string from service");
+                    bundle.putString("string", "response from messenger service");
                     response.obj = bundle;
                     try {
                         mMainMessenger.send(response);

@@ -46,6 +46,7 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+        getSystemService(Context.ACTIVITY_SERVICE)
         val intent = Intent(this, MessengerService::class.java)
         intent.putExtra("msg", mainMessenger)
         bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE)

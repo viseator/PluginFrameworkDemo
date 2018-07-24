@@ -13,6 +13,7 @@
             <option value="$PROJECT_DIR$/dynamic_proxy_hook" />
             <option value="$PROJECT_DIR$/pms_hook" />
             <option value="$PROJECT_DIR$/remote_service" />
+            <option value="$PROJECT_DIR$/undecleared_activity" />
           </set>
         </option>
         <option name="resolveModulePerSourceSet" value="false" />

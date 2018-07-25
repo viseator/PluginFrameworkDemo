@@ -8,7 +8,7 @@ import android.support.v7.app.AppCompatActivity
  * wudi.viseator@bytedance.com
  */
 
-class TargetAcitivity : AppCompatActivity() {
+class TargetActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.target_activity_layout)

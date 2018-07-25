@@ -40,6 +40,6 @@ class IActivityManagerHandler(private val mBase: Any) : InvocationHandler {
     companion object {
         private val TAG = "@vir"
         private const val TARGET_PACKAGE = "com.viseator.undeclearedactivity"
-        private const val TARGET_RAW_INTENT = "intent"
+        const val TARGET_RAW_INTENT = "intent"
     }
 }

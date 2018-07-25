@@ -53,8 +53,6 @@ class MainActivity : AppCompatActivity() {
         val h = hField.get(mainThread)
         mCallbackField.set(h, ProxyCallback(h as Handler))
 
-
-
         val iPMInterface = Class.forName("android.content.pm.IPackageManager")
         val activityThreadClazz = Class.forName("android.app.ActivityThread")
         val sPMField = activityThreadClazz.getDeclaredField("sPackageManager").apply {
@@ -66,9 +64,5 @@ class MainActivity : AppCompatActivity() {
         val pmField = contextImplClass.getDeclaredField("mPackageManager")
         pmField.isAccessible = true
         pmField.set(baseContext, null)
-
-        packageManager.isSafeMode
-
-        return
     }
 }

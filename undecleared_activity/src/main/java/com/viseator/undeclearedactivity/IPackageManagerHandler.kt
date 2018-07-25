@@ -14,7 +14,6 @@ import java.lang.reflect.Method
 
 class IPackageManagerHandler(private val context: Context, private val base: Any) :
         InvocationHandler {
-    private val clazz = base.javaClass
 
     override fun invoke(proxy: Any?, method: Method?, args: Array<out Any>?): Any? {
         Log.d("@vir", "hooked pm: ${method?.name}")

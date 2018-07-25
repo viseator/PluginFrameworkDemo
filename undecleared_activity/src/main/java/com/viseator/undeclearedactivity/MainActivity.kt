@@ -1,5 +1,6 @@
 package com.viseator.undeclearedactivity
 
+import android.content.Context
 import android.content.Intent
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
@@ -21,6 +22,7 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         hook()
+
         startActivity(Intent(this, TargetActivity::class.java))
     }
 
@@ -39,7 +41,6 @@ class MainActivity : AppCompatActivity() {
                 arrayOf(iAMInterface), IActivityManagerHandler(rawIActivityManager))
         mInstanceField.set(gDefault, proxy)
 
-
         val hClazz = Class.forName("android.os.Handler")
         val mCallbackField = hClazz.getDeclaredField("mCallback")
         mCallbackField.isAccessible = true
@@ -51,6 +52,23 @@ class MainActivity : AppCompatActivity() {
         hField.isAccessible = true
         val h = hField.get(mainThread)
         mCallbackField.set(h, ProxyCallback(h as Handler))
+
+
+
+        val iPMInterface = Class.forName("android.content.pm.IPackageManager")
+        val activityThreadClazz = Class.forName("android.app.ActivityThread")
+        val sPMField = activityThreadClazz.getDeclaredField("sPackageManager").apply {
+            isAccessible = true
+        }
+        val hookedPm = Proxy.newProxyInstance(contextImplClass.classLoader, arrayOf(iPMInterface),
+                IPackageManagerHandler(this, sPMField.get(null)))
+        sPMField.set(null, hookedPm)
+        val pmField = contextImplClass.getDeclaredField("mPackageManager")
+        pmField.isAccessible = true
+        pmField.set(baseContext, null)
+
+        packageManager.isSafeMode
+
         return
     }
 }

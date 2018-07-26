@@ -1,1 +1,2 @@
-include ':dynamic_proxy_hook', ':remote_service', ':binder_service_hook', ':ams_hook', ':pms_hook', ':undecleared_activity'
+include ':dynamic_proxy_hook', ':remote_service', ':binder_service_hook', ':ams_hook', ':pms_hook', ':undecleared_activity',
+        ':apk_activity'

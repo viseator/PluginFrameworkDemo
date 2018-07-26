@@ -9,6 +9,7 @@
           <set>
             <option value="$PROJECT_DIR$" />
             <option value="$PROJECT_DIR$/ams_hook" />
+            <option value="$PROJECT_DIR$/apk_activity" />
             <option value="$PROJECT_DIR$/binder_service_hook" />
             <option value="$PROJECT_DIR$/dynamic_proxy_hook" />
             <option value="$PROJECT_DIR$/pms_hook" />

@@ -5,23 +5,20 @@ import android.content.Intent
 import android.content.pm.ApplicationInfo
 import android.os.Bundle
 import android.os.Handler
-import android.os.Process
 import android.provider.Settings
 import android.support.v7.app.AppCompatActivity
 import android.util.ArrayMap
 import android.util.Log
-import kotlinx.android.synthetic.main.activity_main.button
-import java.io.BufferedInputStream
+import dalvik.system.BaseDexClassLoader
+import dalvik.system.DexFile
 import java.io.File
-import java.io.FileInputStream
-import java.io.FileOutputStream
-import java.io.IOException
 import java.io.InputStream
 import java.lang.ref.WeakReference
+import java.lang.reflect.Array
 import java.lang.reflect.Proxy
+import java.util.Arrays
 import java.util.HashMap
-import java.util.zip.ZipEntry
-import java.util.zip.ZipInputStream
+import java.util.zip.ZipFile
 
 class MainActivity : AppCompatActivity() {
     private lateinit var newApplicationInfo: ApplicationInfo
@@ -40,16 +37,59 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         enableLog()
+//        hook1()
+        hook2()
+    }
+
+    private fun hook1() {
+        // hook1
+        newApplicationInfo()
         hookLoadedApk()
         hookContentProvider()
         hook()
-        button.setOnClickListener {
-        }
         val intent = Intent().apply {
             component = ComponentName("com.viseator.undeclearedactivity",
                     "com.viseator.undeclearedactivity.TargetActivity")
         }
         startActivity(intent)
+
+    }
+
+    private fun hook2() {
+        setActivityThread()
+        newApplicationInfo()
+        hookClassLoader()
+        hookContentProvider()
+        hook()
+        val intent = Intent().apply {
+            component = ComponentName("com.viseator.undeclearedactivity",
+                    "com.viseator.undeclearedactivity.TargetActivity")
+        }
+        startActivity(intent)
+    }
+
+    private fun hookClassLoader() {
+        val pathListField = BaseDexClassLoader::class.java.getDeclaredField("pathList").apply {
+            isAccessible = true
+        }
+        val pathList = pathListField.get(classLoader)
+        val dexElementsField = pathList::class.java.getDeclaredField("dexElements").apply {
+            isAccessible = true
+        }
+        val dexElements = dexElementsField.get(pathList) as kotlin.Array<Any>
+        val dexElementClazz = dexElements::class.java.componentType
+        val newDexElements =
+            Array.newInstance(dexElementClazz, dexElements.size + 1) as kotlin.Array<Any>
+
+        val newDexElementConstructor =
+            dexElementClazz.getConstructor(DexFile::class.java)
+        val newDexElement =
+            newDexElementConstructor.newInstance(DexFile(apkFile))
+        newDexElements[0] = dexElements[0]
+        newDexElements[1] = newDexElement
+
+        dexElementsField.set(pathList, newDexElements)
+        return
     }
 
     private fun enableLog() {
@@ -83,9 +123,7 @@ class MainActivity : AppCompatActivity() {
         mProviderField.set(providerMap.valueAt(0), proxyContextProvider)
     }
 
-    private fun hookLoadedApk() {
-        val applicationInfoClazz = Class.forName("android.content.pm.ApplicationInfo")
-        // prepare generate application info
+    private fun newApplicationInfo() {
         val packageParserClazz = Class.forName("android.content.pm.PackageParser")
         val packageUserStateClazz = Class.forName("android.content.pm.PackageUserState")
         val packageClazz = Class.forName("android.content.pm.PackageParser\$Package")
@@ -107,6 +145,19 @@ class MainActivity : AppCompatActivity() {
                         packageUserState) as ApplicationInfo
         newApplicationInfo.sourceDir = apkFile.path
         newApplicationInfo.publicSourceDir = apkFile.path
+    }
+
+    private fun setActivityThread() {
+        // get loadedApk
+        val contextImplClass = Class.forName("android.app.ContextImpl")
+        val activityThreadField = contextImplClass.getDeclaredField("mMainThread")
+        activityThreadField.isAccessible = true
+        activityThread = activityThreadField.get(this.baseContext)
+    }
+
+    private fun hookLoadedApk() {
+        val applicationInfoClazz = Class.forName("android.content.pm.ApplicationInfo")
+        // prepare generate application info
 
         // get loadedApk
         val contextImplClass = Class.forName("android.app.ContextImpl")
@@ -157,6 +208,8 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun hook() {
+        newApplicationInfo.sourceDir = apkFile.path
+        newApplicationInfo.publicSourceDir = apkFile.path
         val amsNativeClass = Class.forName("android.app.ActivityManager")
         val gDefaultField = amsNativeClass.getDeclaredField("IActivityManagerSingleton")
         gDefaultField.isAccessible = true

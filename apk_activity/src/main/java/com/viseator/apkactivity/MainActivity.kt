@@ -5,6 +5,8 @@ import android.content.Intent
 import android.content.pm.ApplicationInfo
 import android.os.Bundle
 import android.os.Handler
+import android.os.Process
+import android.provider.Settings
 import android.support.v7.app.AppCompatActivity
 import android.util.ArrayMap
 import android.util.Log
@@ -23,6 +25,8 @@ import java.util.zip.ZipInputStream
 
 class MainActivity : AppCompatActivity() {
     private lateinit var newApplicationInfo: ApplicationInfo
+    private val activityThreadClazz = Class.forName("android.app.ActivityThread")
+    private lateinit var activityThread: Any
 
     companion object {
         var sLoadedApk: MutableMap<String, Any> = HashMap()
@@ -38,7 +42,9 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+        enableLog()
         hookLoadedApk()
+        hookContentProvider()
         hook()
         button.setOnClickListener {
         }
@@ -47,6 +53,38 @@ class MainActivity : AppCompatActivity() {
                     "com.viseator.undeclearedactivity.TargetActivity")
         }
         startActivity(intent)
+    }
+
+    private fun enableLog() {
+        val namevalueCacheClazz = Class.forName("android.provider.Settings\$NameValueCache")
+        val debugField = namevalueCacheClazz.getDeclaredField("DEBUG").apply {
+            isAccessible = true
+        }
+        val logVField = Settings::class.java.getDeclaredField("LOCAL_LOGV").apply {
+            isAccessible = true
+        }
+        logVField.set(null, true)
+        debugField.set(null, true)
+    }
+
+    private fun hookContentProvider() {
+        val providerMapField = activityThreadClazz.getDeclaredField("mProviderMap").apply {
+            isAccessible = true
+        }
+        val contentProviderClazz = Class.forName("android.content.IContentProvider")
+        val providerMap = providerMapField.get(activityThread) as ArrayMap<Any, Any>
+
+        val providerRecordClazz = Class.forName("android.app.ActivityThread\$ProviderClientRecord")
+        val mProviderField = providerRecordClazz.getDeclaredField("mProvider").apply {
+            isAccessible = true
+        }
+
+
+        val rawContextProvider = mProviderField.get(providerMap.valueAt(0))
+        val proxyContextProvider =
+            Proxy.newProxyInstance(rawContextProvider::class.java.classLoader,
+                    arrayOf(contentProviderClazz), IContentProviderHandler(rawContextProvider))
+        mProviderField.set(providerMap.valueAt(0), proxyContextProvider)
     }
 
     private fun hookLoadedApk() {
@@ -75,11 +113,10 @@ class MainActivity : AppCompatActivity() {
         newApplicationInfo.publicSourceDir = apkFile.path
 
         // get loadedApk
-        val activityThreadClazz = Class.forName("android.app.ActivityThread")
         val contextImplClass = Class.forName("android.app.ContextImpl")
         val activityThreadField = contextImplClass.getDeclaredField("mMainThread")
         activityThreadField.isAccessible = true
-        val activityThread = activityThreadField.get(this.baseContext)
+        activityThread = activityThreadField.get(this.baseContext)
 
         val logField = activityThreadClazz.getDeclaredField("localLOGV").apply {
             isAccessible = true

@@ -33,10 +33,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private val apkFile by lazy {
-        File(cacheDir, "target.apk").copyInputStreamToFile(assets.open("target.apk")).let {
-            unpackZip(it.parent + "/", it.name)
-            it
-        }
+        File(cacheDir, "target.apk").copyInputStreamToFile(assets.open("target.apk"))
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -78,7 +75,6 @@ class MainActivity : AppCompatActivity() {
         val mProviderField = providerRecordClazz.getDeclaredField("mProvider").apply {
             isAccessible = true
         }
-
 
         val rawContextProvider = mProviderField.get(providerMap.valueAt(0))
         val proxyContextProvider =
@@ -216,48 +212,4 @@ class MainActivity : AppCompatActivity() {
         }
         return this
     }
-
-    private fun unpackZip(path: String, zipname: String): Boolean {
-        val `is`: InputStream
-        val zis: ZipInputStream
-        try {
-            var filename: String
-            `is` = FileInputStream(path + zipname)
-            zis = ZipInputStream(BufferedInputStream(`is`))
-            var ze: ZipEntry? = null
-            val buffer = ByteArray(1024)
-            var count: Int = 0
-
-            while ({ ze = zis.getNextEntry(); ze }() != null) {
-                // zapis do souboru
-                filename = ze?.getName()!!
-
-                // Need to create directories if not exists, or
-                // it will generate an Exception...
-                if (ze!!.isDirectory()) {
-                    val fmd = File(path + filename)
-                    fmd.mkdirs()
-                    continue
-                }
-
-                val fout = FileOutputStream(path + filename)
-
-                // cteni zipu a zapis
-                while ({ count = zis.read(buffer); count }() != -1) {
-                    fout.write(buffer, 0, count)
-                }
-
-                fout.close()
-                zis.closeEntry()
-            }
-
-            zis.close()
-        } catch (e: IOException) {
-            e.printStackTrace()
-            return false
-        }
-
-        return true
-    }
-
 }
